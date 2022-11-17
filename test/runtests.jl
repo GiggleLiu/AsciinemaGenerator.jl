@@ -4,10 +4,10 @@ using Test
 
 @testset "output" begin
     input = :(println(3); ones(10, 10))
-    str = AsciinemaGenerator.output_string(JuliaInput(; input)) 
+    str = AsciinemaGenerator.output_string(@__MODULE__, JuliaInput(; input)) 
     @test str == "3\n10×10 Matrix{Float64}:\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0"
     
-    str = AsciinemaGenerator.output_string(JuliaInput(; input)) 
+    str = AsciinemaGenerator.output_string(@__MODULE__, JuliaInput(; input)) 
     @test str == "3\n10×10 Matrix{Float64}:\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0"
 end
 
@@ -27,7 +27,7 @@ end
         :(using Pkg),
         :(Pkg.status())
     ]]
-    @test AsciinemaGenerator.generate(Main, commands) isa String
+    @test AsciinemaGenerator.generate(@__MODULE__, commands) isa String
 end
 
 @testset "cast file" begin
