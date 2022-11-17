@@ -2,4 +2,7 @@
 
 using Pkg
 
-Pkg.status()
+#: Waiting for 5 seconds
+#+ 5
+
+println("haa"); Pkg.status()

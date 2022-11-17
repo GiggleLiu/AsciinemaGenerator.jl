@@ -35,3 +35,17 @@ end
     cast_file(joinpath(@__DIR__, "test_input.jl"); output_file)
     @test isfile(output_file)
 end
+
+@testset "read until line break" begin
+    @test AsciinemaGenerator.readuntil_linebreak("1231231\n", 1) == ("1231231", 8)
+    @test AsciinemaGenerator.readuntil_linebreak("  \n1231231\nadsf", 5) == ("231231", 11)
+    @test AsciinemaGenerator.readuntil_linebreak("1231231", 2) == ("231231", 8)
+    @test AsciinemaGenerator.readuntil_linebreak("1231231", 12) == ("", 12)
+    @test AsciinemaGenerator.readuntil_linebreak("", 1) == ("", 1)
+end
+
+@testset "parseall" begin
+    @test AsciinemaGenerator.parseall("") == []
+    str = "@show \"Hello\"\n\nusing Pkg\n\n#: Waiting for 5 seconds\n#+ 5\n\nprintln(\"haa\"); Pkg.status()"
+    @test length(AsciinemaGenerator.parseall(str)) == 5
+end
