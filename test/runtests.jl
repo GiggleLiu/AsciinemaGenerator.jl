@@ -45,7 +45,10 @@ end
 end
 
 @testset "parseall" begin
-    @test AsciinemaGenerator.parseall("") == []
+    @test AsciinemaGenerator.parseall("")[1] == []
+    @test AsciinemaGenerator.parseall("")[2] == []
     str = "@show \"Hello\"\n\nusing Pkg\n\n#: Waiting for 5 seconds\n#+ 5\n\nprintln(\"haa\"); Pkg.status()"
-    @test length(AsciinemaGenerator.parseall(str)) == 5
+    exs, strings = AsciinemaGenerator.parseall(str)
+    @test length(exs) == 5
+    @test length(strings) == 5
 end
