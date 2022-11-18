@@ -9,7 +9,7 @@ Base.@kwdef struct JuliaInput
     delay::Float64 = 0.5
     julia_delay::Float64 = 0.2
     char_delay::Float64 = 0.1
-    output_row_delay::Float64 = 0.01
+    output_row_delay::Float64 = 0.005
     output_delay::Float64 = 0.5
 end
 
@@ -18,7 +18,7 @@ struct ControlNode
     args::Vector{Any}
 end
 
-LINEBREAK(t) = """[$t, "o", "\\r\\n"]"""
+LINEBREAK(t) = """[$t, "o", "\\r\\n\\u001b[0K"]"""
 JULIA(t) = """[$t, "o", "\\r\\u001b[0K\\u001b[32m\\u001b[1mjulia> \\u001b[0m\\u001b[0m\\r\\u001b[7C"]"""
 
 function generate(m::Module, commands::Vector{JuliaInput}; width::Int=82, height::Int=43, start_delay::Float64=0.5, randomness::Float64=0.5)
@@ -31,18 +31,20 @@ function generate(m::Module, commands::Vector{JuliaInput}; width::Int=82, height
                 t += command.input.args[1]
                 continue
             elseif command.input.head == :comment
-                command = JuliaInput(input=nothing, input_string="# " * command.input.args[1],
-                    delay = command.delay,
-                    char_delay = command.char_delay,
-                    julia_delay = command.julia_delay,
-                    output_delay = command.output_delay,
-                    output_row_delay = command.output_row_delay,
-                    )
+                push!(lines, JULIA(t))
+                t += fluctuate(command.julia_delay, randomness)
+                t, l = input_lines(t, "#" * command.input_string; command.char_delay)
+                append!(lines, l)
+                push!(lines, LINEBREAK(t))
+                k != length(commands) && push!(lines, LINEBREAK(t))
+                continue
+            else
+                error("command type `$(command.input.head)` is not defined.")
             end
         end
         push!(lines, JULIA(t))
         t += fluctuate(command.julia_delay, randomness)
-        t, l = input_lines(t, command)
+        t, l = input_lines(t, command.input_string; command.char_delay)
         append!(lines, l)
         push!(lines, LINEBREAK(t))
         t += fluctuate(command.output_delay, randomness)
@@ -83,7 +85,27 @@ function cast_file(filename;
     exs = rmlines.(exs)
     cmds = JuliaInput[]
     for (input, input_string) in zip(exs, strings)
-        push!(cmds, JuliaInput(; input, input_string, delay, julia_delay, char_delay, output_row_delay, output_delay))
+        if input isa ControlNode && input.head == :setting
+            for ex in input.args
+                @assert ex.head == :(=) "the delay argument should be something like, `delay = 3; output_delay=4`, got `$(ex)`"
+                type = ex.args[1]
+                if type == :delay
+                    delay = ex.args[2]
+                elseif type == :julia_delay
+                    julia_delay = ex.args[2]
+                elseif type == :char_delay
+                    char_delay = ex.args[2]
+                elseif type == :output_row_delay
+                    output_row_delay = ex.args[2]
+                elseif type == :output_delay
+                    output_delay = ex.args[2]
+                else
+                    error("variable `$type` not found.")
+                end
+            end
+        else
+            push!(cmds, JuliaInput(; input, input_string, delay, julia_delay, char_delay, output_row_delay, output_delay))
+        end
     end
     str = generate(mod, cmds; width, height, start_delay, randomness)
     if output_file !== nothing
@@ -95,14 +117,15 @@ end
 function multiple_lines(t::Float64, list; delay, randomness)
     lines = String[]
     for (i, ch) in enumerate(list)
-        push!(lines, """[$t, "o", "$(tame(ch))"]""")
+        tch = tame(ch)
+        push!(lines, """[$t, "o", "$tch"]""")
         push!(lines, LINEBREAK(t))
         i !== length(list) && (t += fluctuate(delay, randomness))
     end
     return t, lines
 end
 
-function output_string(m::Module, cmd::JuliaInput; width=60, height=40)
+function output_string(m::Module, cmd::JuliaInput; width, height)
     pipe = Pipe()
     io = IOContext(pipe, :color => true, :limit => true, :displaysize => (width, height))
 
@@ -113,25 +136,28 @@ function output_string(m::Module, cmd::JuliaInput; width=60, height=40)
                 show(io, "text/plain", res)
             end
         catch e
-            show(io, "text/plain", e)
+            showerror(io, e)
         end
     end
     close(Base.pipe_writer(io.io))
     return read(io.io, String)
 end
 
-function input_lines(t::Float64, cmd::JuliaInput)
-    sinput = replace(cmd.input_string, "\n"=>"\n\r")
+function input_lines(t::Float64, input_string; char_delay)
+    inputs = split(strip(input_string, '\n'), "\n")
     lines = String[]
-    for (i, ch) in enumerate(sinput)
-        push!(lines, """[$t, "o", $(repr(string(ch)))]""")
-        i !== length(sinput) && (t += cmd.char_delay)
+    for (k, input) in enumerate(inputs)
+        for (i, ch) in enumerate(input)
+            push!(lines, """[$t, "o", $(repr(string(ch)))]""")
+            i !== length(input) && (t += char_delay)
+        end
+        k == length(inputs) || push!(lines, """[$t, "o", "\\n\\r\\u001b[0K       "]""")
     end
     return t, lines
 end
 
 function tame(str::AbstractString)
-    replace(str, "\e"=>"\\u001b", "\""=>"\\\"", "\\\$"=>"\$")
+    replace(str, "\e"=>"\\u001b", "\\\""=>"\\\\\\\"", "\""=>"\\\"", "\n"=>"\n\r")
 end
 
 """
@@ -165,14 +191,19 @@ function parseall(str)
 
         # detect comments
         sub = str[pos:end]
-        if startswith(sub, "#: ")
-            c, pos = readuntil_linebreak(str, pos+3)
-            push!(exs, ControlNode(:comment, Any[c]))
-            push!(strings, c)
-            continue
-        elseif startswith(sub, "#+ ")
+        if startswith(sub, "#+ ")  # delay
             c, pos = readuntil_linebreak(str, pos+3)
             push!(exs, ControlNode(:delay, Any[parse(Float64, c)]))
+            push!(strings, c)
+            continue
+        elseif startswith(sub, "#s ")  # setting
+            c, pos = readuntil_linebreak(str, pos+3)
+            push!(exs, ControlNode(:setting, parse_kwargs(c)))
+            push!(strings, c)
+            continue
+        elseif startswith(sub, "#")  # regular comments
+            c, pos = readuntil_linebreak(str, pos+1)
+            push!(exs, ControlNode(:comment, Any[c]))
             push!(strings, c)
             continue
         end
@@ -184,6 +215,22 @@ function parseall(str)
         push!(strings, str[start:pos-1])
     end
     return exs, strings
+end
+
+function parse_kwargs(c::String)
+    ex = Meta.parse(c)
+    if ex === nothing
+    elseif ex isa Expr
+        if ex.head == :(=)
+            return Any[ex]
+        elseif ex.head == :toplevel
+            return ex.args
+        else
+            error("parsed value is not a valid expression: $(ex)")
+        end
+    else
+        error("parsed value is not an expression: $(ex)")
+    end
 end
 
 function readuntil_linebreak(x::String, pos::Int)
