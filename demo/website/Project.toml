@@ -1,0 +1,6 @@
+[deps]
+Franklin = "713c75ef-9fc9-4b05-94a9-213340da978e"
+KrylovKit = "0b1a1467-8014-51b9-945f-bf0ae24f4b77"
+NodeJS = "2bd173c7-0d6d-553b-b6af-13a54713934c"
+SymEngine = "123dc426-2d89-5057-bbad-38513e3affd8"
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
