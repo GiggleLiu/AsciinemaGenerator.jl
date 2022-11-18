@@ -22,10 +22,29 @@ Base.:(==)(a::ControlNode, b::ControlNode) = a.head == b.head && a.args == b.arg
 
 LINEBREAK(t) = """[$t, "o", "\\r\\n\\u001b[0K"]"""
 JULIA(t) = """[$t, "o", "\\r\\u001b[0K\\u001b[32m\\u001b[1mjulia> \\u001b[0m\\u001b[0m\\r\\u001b[7C"]"""
+function JULIA_INIT()
+    return raw"""[0.0, "o", "               \u001b[1m\u001b[32m_\u001b[0m\r\n   \u001b[1m\u001b[34m_\u001b[0m""" *
+    raw"""       \u001b[0m_\u001b[0m \u001b[1m\u001b[31m_\u001b[1m\u001b[32m(_)\u001b[1m\u001b[35m_\u001b[0m     |  """ *
+    raw"""Documentation: https://docs.julialang.org\r\n  \u001b[1m\u001b[34m(_)\u001b[0m     | """ *
+    raw"""\u001b[1m\u001b[31m(_)\u001b[0m \u001b[1m\u001b[35m(_)\u001b[0m    |\r\n   \u001b[0m_ _   _| """ *
+    raw"""|_  __ _\u001b[0m   |  Type \\\"?\\\" for help, \\\"]?\\\" for Pkg help.\r\n  \u001b[0m| | | | | | |/ _` |\u001b[0m  """ *
+    raw"""|\r\n  \u001b[0m| | |_| | | | (_| |\u001b[0m  |  Version """ *
+    string(VERSION) *
+    " ($(Base.GIT_VERSION_INFO.date_string[1:10]))" * 
+    raw"""\r\n \u001b[0m_/ |\\__'_|_|_|\\__'_|\u001b[0m  |  Official https://julialang.org/ release\r\n\u001b[0m|__/\u001b[0m                   |\r\n\r\n""" *
+    raw"""\u001b[?2004h\r\u001b[0K\u001b[32m\u001b[1mjulia> \u001b[0m\u001b[0m\r\u001b[7C\r\u001b[7C"]"""
+end
 
-function generate(m::Module, commands::Vector{JuliaInput}; width::Int=82, height::Int=43, start_delay::Float64=0.5, randomness::Float64=0.5)
+function generate(m::Module, commands::Vector{JuliaInput};
+        width::Int=82, height::Int=43, start_delay::Float64=0.5,
+        randomness::Float64=0.5,
+        show_julia_version::Bool=true
+        )
     s = """{"version": 2, "width": $width, "height": $height, "timestamp": $(round(Int, time())), "env": {"SHELL": "/usr/bin/zsh", "TERM": "xterm-256color"}}"""
     lines = [s]
+    if show_julia_version
+        push!(lines, JULIA_INIT())
+    end
     t = start_delay
     for (k, command) in enumerate(commands)
         if command.input isa ControlNode
@@ -158,10 +177,16 @@ function cast_file(filename::String;
         char_delay::Float64 = 0.1,
         output_row_delay::Float64 = 0.005,
         output_delay::Float64 = 0.5,
+
+        show_julia_version::Bool=true,
+        show_pkg_status::Bool=false
     )::String
     exs, strings = parsefile(filename)
     cmds = generate_commands(exs, strings; delay, prompt_delay, char_delay, output_row_delay, output_delay)
-    str = generate(mod, cmds; width, height, start_delay, randomness)
+    if show_pkg_status
+        insert!(cmds, 1, JuliaInput(:(using Pkg; Pkg.status()), "using Pkg; Pkg.status()", delay, prompt_delay, char_delay, output_row_delay, output_delay))
+    end
+    str = generate(mod, cmds; width, height, start_delay, randomness, show_julia_version)
     if output_file !== nothing
         write(output_file, str)
     end

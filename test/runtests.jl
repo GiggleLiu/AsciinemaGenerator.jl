@@ -32,7 +32,7 @@ end
 
 @testset "cast file" begin
     output_file = tempname()
-    cast_file(joinpath(@__DIR__, "test_input.jl"); output_file)
+    cast_file(joinpath(@__DIR__, "test_input.jl"); output_file, show_pkg_status=true, show_julia_version=true)
     @test isfile(output_file)
 end
 
