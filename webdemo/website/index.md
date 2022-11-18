@@ -11,6 +11,4 @@ AsciinemaPlayer.create('/assets/scripts/yao.cast', document.getElementById('demo
 </script>
 ~~~
 
-```julia
-{{insert /assets/scripts/handson.jl}}
-```
+\input{julia}{/assets/scripts/handson.jl}
