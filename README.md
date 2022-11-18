@@ -23,7 +23,8 @@ search: cast_file
           output_delay::Float64 = 0.5,
       ) -> String
 
-  Convert a Julia file to a .cast file that can be played by asciinema. The return value is a string as the content of the .cast file.
+  Convert a Julia file to a .cast file that can be played by asciinema.
+  The return value is a string as the content of the .cast file.
 
   Keyword Arguments
   –––––––––––––––––––
