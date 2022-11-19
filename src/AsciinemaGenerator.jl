@@ -1,16 +1,18 @@
 module AsciinemaGenerator
 
+using REPL
+
 export cast_file
 
 Base.@kwdef struct JuliaInput
     input   # expression
     input_string::String = string(rmlines(input))
 
-    delay::Float64 = 0.2
-    prompt_delay::Float64 = 0.5
-    char_delay::Float64 = 0.1
-    output_row_delay::Float64 = 0.005
-    output_delay::Float64 = 0.5
+    delay::Float64
+    prompt_delay::Float64
+    char_delay::Float64 
+    output_row_delay::Float64
+    output_delay::Float64
 end
 Base.:(==)(a::JuliaInput, b::JuliaInput) = all(name->getfield(a, name) == getfield(b, name), fieldnames(JuliaInput))
 
@@ -36,9 +38,9 @@ function JULIA_INIT()
 end
 
 function generate(m::Module, commands::Vector{JuliaInput};
-        width::Int=82, height::Int=43, start_delay::Float64=0.5,
-        randomness::Float64=0.5,
-        show_julia_version::Bool=true
+        width::Int, height::Int, start_delay::Float64,
+        randomness::Float64,
+        show_julia_version::Bool
         )
     s = """{"version": 2, "width": $width, "height": $height, "timestamp": $(round(Int, time())), "env": {"SHELL": "/usr/bin/zsh", "TERM": "xterm-256color"}}"""
     lines = [s]
@@ -69,19 +71,18 @@ function generate(m::Module, commands::Vector{JuliaInput};
         append!(lines, l)
         push!(lines, LINEBREAK(t))
         t += fluctuate(command.output_delay, randomness)
-        os = output_string(m, command; width, height)
+        os = output_string(m, command; width, height, suppressed=REPL.ends_with_semicolon(command.input_string))
         if !isempty(os)
             output_lines = split(os, "\n")
             t, l = multiple_lines(t, output_lines; delay=command.output_row_delay, randomness)
             append!(lines, l)
         end
         t += fluctuate(command.delay, randomness)
-        k != length(commands) && push!(lines, LINEBREAK(t))
     end
     return join(lines, "\n")
 end
 
-fluctuate(t, randomness) = max(t * (1 + randomness * randn()), 1e-2)
+fluctuate(t, randomness) = max(t * (1 + randomness * randn()), 1e-3)
 
 parsefile(file) = open(file) do f
     s = read(f, String)
@@ -94,13 +95,13 @@ end
             start_delay::Float64 = 0.5,
             width::Int=82,
             height::Int=43,
-            randomness::Float64 = 1.0,
+            randomness::Float64 = 0.0,
             output_file = nothing,
 
             # initial values for statement configuration
             delay::Float64 = 0.2,
             prompt_delay::Float64 = 0.5,
-            char_delay::Float64 = 0.1,
+            char_delay::Float64 = 0.05,
             output_row_delay::Float64 = 0.005,
             output_delay::Float64 = 0.5,
         ) -> String
@@ -168,13 +169,13 @@ function cast_file(filename::String;
         start_delay::Float64 = 0.5,
         width::Int=82,
         height::Int=43,
-        randomness::Float64 = 1.0,
+        randomness::Float64 = 0.0,
         output_file = nothing,
 
         # initial values for statement configuration
-        delay::Float64 = 0.2,
+        delay::Float64 = 0.1,
         prompt_delay::Float64 = 0.5,
-        char_delay::Float64 = 0.1,
+        char_delay::Float64 = 0.05,
         output_row_delay::Float64 = 0.005,
         output_delay::Float64 = 0.5,
 
@@ -232,24 +233,35 @@ function multiple_lines(t::Float64, list; delay, randomness)
     for (i, ch) in enumerate(list)
         tch = tame(ch)
         push!(lines, """[$t, "o", "$tch"]""")
-        push!(lines, LINEBREAK(t))
-        i !== length(list) && (t += fluctuate(delay, randomness))
+        if i !== length(list)
+            push!(lines, LINEBREAK(t))
+            t += fluctuate(delay, randomness)
+        end
     end
     return t, lines
 end
 
-function output_string(m::Module, cmd::JuliaInput; width, height)
+function output_string(m::Module, cmd::JuliaInput; width, height, suppressed)
     pipe = Pipe()
     io = IOContext(pipe, :color => true, :limit => true, :displaysize => (width, height))
 
     res = redirect_stdout(io) do
         try
             res = Core.eval(m, cmd.input)
-            if res !== nothing
-                show(io, "text/plain", res)
+            if !suppressed
+                if res !== nothing
+                    show(io, "text/plain", res)
+                    println(io)
+                    println(io)
+                else
+                    println(io)
+                end
+            else
+                println(io)
             end
         catch e
             showerror(io, e)
+            println(io)
         end
     end
     close(Base.pipe_writer(io.io))
@@ -297,10 +309,10 @@ function parseall(str)
     strings = String[]
     while true
         # cleanup leading line breaks
-        while pos <= length(str) && str[pos] == '\n'
-            pos += 1
+        while pos <= lastindex(str) && str[pos] == '\n'
+            pos = nextind(str, pos)
         end
-        pos > length(str) && break
+        pos > lastindex(str) && break
 
         # detect comments
         sub = str[pos:end]
@@ -325,7 +337,7 @@ function parseall(str)
         ex, pos = Meta.parse(str, pos) # returns next starting point as well as expr
         ex === nothing && break
         push!(exs, ex)
-        push!(strings, str[start:pos-1])
+        push!(strings, str[start:prevind(str, pos)])
     end
     return exs, strings
 end
@@ -349,10 +361,10 @@ end
 function readuntil_linebreak(x::String, pos::Int)
     isempty(x) && return ("", pos)
     stop = pos
-    while stop <= length(x) && x[stop] != '\n'
-        stop += 1
+    while stop <= lastindex(x) && x[stop] != '\n'
+        stop = nextind(x, stop)
     end
-    return (stop > length(x) ? x[pos:end] : x[pos:stop-1]), stop
+    return (stop > lastindex(x) ? x[pos:end] : x[pos:prevind(x, stop)]), stop
 end
 
 end

@@ -4,11 +4,15 @@ using Test
 
 @testset "output" begin
     input = :(println(3); ones(10, 10))
-    str = AsciinemaGenerator.output_string(@__MODULE__, JuliaInput(; input), width=82, height=43) 
-    @test str == "3\n10×10 Matrix{Float64}:\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0"
+    str = AsciinemaGenerator.output_string(@__MODULE__,
+        JuliaInput(; input, delay=0.1, char_delay=0.1, output_delay=0.1, output_row_delay=0.01, prompt_delay=0.1),
+        width=82, height=43, suppressed=false) 
+    @test str == "3\n10×10 Matrix{Float64}:\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n\n"
     
-    str = AsciinemaGenerator.output_string(@__MODULE__, JuliaInput(; input), width=82, height=43) 
-    @test str == "3\n10×10 Matrix{Float64}:\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0  …  1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0\n 1.0  1.0  1.0  1.0     1.0  1.0  1.0"
+    str = AsciinemaGenerator.output_string(@__MODULE__,
+        JuliaInput(; input, delay=0.1, char_delay=0.1, output_delay=0.1, output_row_delay=0.01, prompt_delay=0.1),
+        width=82, height=43, suppressed=true) 
+    @test str == "3\n\n"
 end
 
 @testset "output" begin
@@ -22,12 +26,12 @@ end
 end
 
 @testset "test generation" begin
-    commands = [JuliaInput(input=x) for x in [
+    commands = [JuliaInput(input=x, delay=0.1, char_delay=0.1, output_delay=0.1, output_row_delay=0.01, prompt_delay=0.1) for x in [
         :(@show "Yao!"),
         :(using Pkg),
         :(Pkg.status())
     ]]
-    @test AsciinemaGenerator.generate(@__MODULE__, commands) isa String
+    @test AsciinemaGenerator.generate(@__MODULE__, commands; width=82, height=40, show_julia_version=true, start_delay=0.5, randomness=0.0) isa String
 end
 
 @testset "cast file" begin
