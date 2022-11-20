@@ -263,8 +263,7 @@ function output_string(m::Module, cmd::JuliaInput; width, height, suppressed)
             res = Core.eval(m, cmd.input)
             if !suppressed
                 if res !== nothing
-                    show(io, "text/plain", res)
-                    println(io)
+                    Core.eval(m, :(println($io, $res)))
                     println(io)
                 else
                     println(io)
@@ -274,6 +273,7 @@ function output_string(m::Module, cmd::JuliaInput; width, height, suppressed)
             end
         catch e
             showerror(io, e)
+            println(io)
             println(io)
         end
     end
