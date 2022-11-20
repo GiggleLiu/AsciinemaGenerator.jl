@@ -40,7 +40,8 @@ end
 function generate(m::Module, commands::Vector{JuliaInput};
         width::Int, height::Int, start_delay::Float64,
         randomness::Float64,
-        show_julia_version::Bool
+        show_julia_version::Bool,
+        tada::Bool,
         )
     s = """{"version": 2, "width": $width, "height": $height, "timestamp": $(round(Int, time())), "env": {"SHELL": "/usr/bin/zsh", "TERM": "xterm-256color"}}"""
     lines = [s]
@@ -79,6 +80,9 @@ function generate(m::Module, commands::Vector{JuliaInput};
         end
         t += fluctuate(command.delay, randomness)
     end
+    push!(lines, JULIA(t))
+    tada && push!(lines, """[$(t), "o", "🎉"]""")
+    push!(lines, """[$(t+0.2), "o", "\\r\\n"]""")
     return join(lines, "\n")
 end
 
@@ -104,6 +108,10 @@ end
             char_delay::Float64 = 0.05,
             output_row_delay::Float64 = 0.005,
             output_delay::Float64 = 0.5,
+
+            show_julia_version::Bool=true,
+            show_pkg_status::Bool=false,
+            tada::Bool=false,
         ) -> String
     
 
@@ -118,6 +126,10 @@ The following keyword arguments are for global configurations,
 * `start_delay` is time delay before running the first statement.
 * `width` and `height` are the width and height of the terminal.
 * `randomness` is the uncertainty in the time delay.
+
+* if `show_julia_version` is true, show Julia welcome page.
+* if `show_pkg_status`is true, show package status at the begining.
+* if `tada` is true, show `🎉` at the end of the show.
 
 The following keyword arguments are for the initial statement-wise configurations,
 
@@ -180,14 +192,15 @@ function cast_file(filename::String;
         output_delay::Float64 = 0.5,
 
         show_julia_version::Bool=true,
-        show_pkg_status::Bool=false
+        show_pkg_status::Bool=false,
+        tada::Bool=false,
     )::String
     exs, strings = parsefile(filename)
     cmds = generate_commands(exs, strings; delay, prompt_delay, char_delay, output_row_delay, output_delay)
     if show_pkg_status
         insert!(cmds, 1, JuliaInput(:(using Pkg; Pkg.status()), "using Pkg; Pkg.status()", delay, prompt_delay, char_delay, output_row_delay, output_delay))
     end
-    str = generate(mod, cmds; width, height, start_delay, randomness, show_julia_version)
+    str = generate(mod, cmds; width, height, start_delay, randomness, show_julia_version, tada)
     if output_file !== nothing
         write(output_file, str)
     end

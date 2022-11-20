@@ -31,7 +31,7 @@ end
         :(using Pkg),
         :(Pkg.status())
     ]]
-    @test AsciinemaGenerator.generate(@__MODULE__, commands; width=82, height=40, show_julia_version=true, start_delay=0.5, randomness=0.0) isa String
+    @test AsciinemaGenerator.generate(@__MODULE__, commands; width=82, height=40, show_julia_version=true, start_delay=0.5, randomness=0.0, tada=true) isa String
 end
 
 @testset "cast file" begin
