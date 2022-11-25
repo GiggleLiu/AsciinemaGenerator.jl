@@ -258,24 +258,28 @@ function output_string(m::Module, cmd::JuliaInput; width, height, suppressed)
     pipe = Pipe()
     io = IOContext(pipe, :color => true, :limit => true, :displaysize => (width, height))
 
-    res = redirect_stdout(io) do
-        try
-            res = Core.eval(m, cmd.input)
-            if !suppressed
-                if res !== nothing
-                    Core.eval(m, :(Base.show($io, MIME"text/plain"(), $res)))
-                    println(io)
-                    println(io)
+    redirect_stdout(io) do
+        redirect_stderr(io) do
+            try
+                res = Core.eval(m, cmd.input)
+                if !suppressed
+                    if res !== nothing
+                        Core.eval(m, :(Base.show($io, MIME"text/plain"(), $res)))
+                        println(io)
+                        println(io)
+                    else
+                        println(io)
+                    end
                 else
                     println(io)
                 end
-            else
+            catch e
+                Base.printstyled("ERROR: "; color=:red, bold=true)
+                showerror(io, e)
+                Base.show_backtrace(io, Base.catch_backtrace())
+                println(io)
                 println(io)
             end
-        catch e
-            showerror(io, e)
-            println(io)
-            println(io)
         end
     end
     close(Base.pipe_writer(io.io))
@@ -287,12 +291,21 @@ function input_lines(t::Float64, input_string; char_delay)
     lines = String[]
     for (k, input) in enumerate(inputs)
         for (i, ch) in enumerate(input)
-            push!(lines, """[$t, "o", $(repr(string(ch)))]""")
+            push!(lines, """[$t, "o", "$(tame_input(ch))"]""")
             i !== length(input) && (t += char_delay)
         end
         k == length(inputs) || push!(lines, """[$t, "o", "\\n\\r\\u001b[0K       "]""")
     end
     return t, lines
+end
+
+# escape char
+function tame_input(c::Char)
+    if c == '\$'
+        return "\$"
+    else
+        return escape_string(string(c))
+    end
 end
 
 function tame(str::AbstractString)
