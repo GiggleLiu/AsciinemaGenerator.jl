@@ -48,6 +48,7 @@ function generate(m::Module, commands::Vector{JuliaInput};
     if show_julia_version
         push!(lines, JULIA_INIT())
     end
+
     t = start_delay
     for (k, command) in enumerate(commands)
         if command.input isa ControlNode
@@ -55,18 +56,17 @@ function generate(m::Module, commands::Vector{JuliaInput};
                 t += command.input.args[1]
                 continue
             elseif command.input.head == :comment
-                push!(lines, JULIA(t))
                 t += fluctuate(command.prompt_delay, randomness)
                 t, l = input_lines(t, "#" * command.input_string; command.char_delay)
                 append!(lines, l)
                 push!(lines, LINEBREAK(t))
                 k != length(commands) && push!(lines, LINEBREAK(t))
+                push!(lines, JULIA(t))
                 continue
             else
                 error("command type `$(command.input.head)` is not defined.")
             end
         end
-        push!(lines, JULIA(t))
         t += fluctuate(command.prompt_delay, randomness)
         t, l = input_lines(t, command.input_string; command.char_delay)
         append!(lines, l)
@@ -78,9 +78,9 @@ function generate(m::Module, commands::Vector{JuliaInput};
             t, l = multiple_lines(t, output_lines; delay=command.output_row_delay, randomness)
             append!(lines, l)
         end
+        push!(lines, JULIA(t))
         t += fluctuate(command.delay, randomness)
     end
-    push!(lines, JULIA(t))
     tada && push!(lines, """[$(t), "o", "🎉"]""")
     push!(lines, """[$(t+0.2), "o", "\\r\\n"]""")
     return join(lines, "\n")
