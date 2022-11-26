@@ -58,14 +58,12 @@ function generate(m::Module, commands::Vector{JuliaInput};
                 continue
             elseif command.input.head == :comment
                 t += fluctuate(command.prompt_delay, randomness)
-                #t, l = input_lines(t, "#" * command.input_string; command.char_delay)
                 comment = "#" * command.input_string
                 for c in split(comment, " ")
                     push!(lines, """[$t, "o", $(repr(c * " "))]""")
                     t += fluctuate(command.char_delay, randomness)
                 end
                 t += fluctuate(comment_delay, randomness)
-                #append!(lines, l)
                 push!(lines, LINEBREAK(t))
                 k != length(commands) && push!(lines, LINEBREAK(t))
                 push!(lines, JULIA(t))
