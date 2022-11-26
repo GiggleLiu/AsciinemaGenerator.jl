@@ -39,6 +39,7 @@ end
 
 function generate(m::Module, commands::Vector{JuliaInput};
         width::Int, height::Int, start_delay::Float64,
+        comment_delay::Float64,
         randomness::Float64,
         show_julia_version::Bool,
         tada::Bool,
@@ -57,8 +58,14 @@ function generate(m::Module, commands::Vector{JuliaInput};
             elseif command.input.head == :comment
                 push!(lines, JULIA(t))
                 t += fluctuate(command.prompt_delay, randomness)
-                t, l = input_lines(t, "#" * command.input_string; command.char_delay)
-                append!(lines, l)
+                #t, l = input_lines(t, "#" * command.input_string; command.char_delay)
+                comment = "#" * command.input_string
+                for c in split(comment, " ")
+                    push!(lines, """[$t, "o", $(repr(c * " "))]""")
+                    t += fluctuate(command.char_delay, randomness)
+                end
+                t += fluctuate(comment_delay, randomness)
+                #append!(lines, l)
                 push!(lines, LINEBREAK(t))
                 k != length(commands) && push!(lines, LINEBREAK(t))
                 continue
@@ -105,6 +112,7 @@ end
             # initial values for statement configuration
             delay::Float64 = 0.2,
             prompt_delay::Float64 = 0.5,
+            comment_delay::Float64 = 0.5,
             char_delay::Float64 = 0.05,
             output_row_delay::Float64 = 0.005,
             output_delay::Float64 = 0.5,
@@ -134,6 +142,7 @@ The following keyword arguments are for global configurations,
 The following keyword arguments are for the initial statement-wise configurations,
 
 * `prompt_delay` is the time delay between `julia>` and the statement input.
+* `comment_delay` is the time delay after a comment.
 * `char_delay` is the time delay between typing two chars.
 * `output_delay` is time delay between the input and the output of a statement.
 * `output_row_delay` is time delay between rows of the output of a statement.
@@ -187,6 +196,7 @@ function cast_file(filename::String;
         # initial values for statement configuration
         delay::Float64 = 0.1,
         prompt_delay::Float64 = 0.5,
+        comment_delay::Float64 = 0.5,
         char_delay::Float64 = 0.05,
         output_row_delay::Float64 = 0.005,
         output_delay::Float64 = 0.5,
@@ -200,7 +210,7 @@ function cast_file(filename::String;
     if show_pkg_status
         insert!(cmds, 1, JuliaInput(:(using Pkg; Pkg.status()), "using Pkg; Pkg.status()", delay, prompt_delay, char_delay, output_row_delay, output_delay))
     end
-    str = generate(mod, cmds; width, height, start_delay, randomness, show_julia_version, tada)
+    str = generate(mod, cmds; width, height, start_delay, randomness, show_julia_version, tada, comment_delay)
     if output_file !== nothing
         write(output_file, str)
     end
