@@ -49,6 +49,7 @@ function generate(m::Module, commands::Vector{JuliaInput};
     if show_julia_version
         push!(lines, JULIA_INIT())
     end
+
     t = start_delay
     for (k, command) in enumerate(commands)
         if command.input isa ControlNode
@@ -56,7 +57,6 @@ function generate(m::Module, commands::Vector{JuliaInput};
                 t += command.input.args[1]
                 continue
             elseif command.input.head == :comment
-                push!(lines, JULIA(t))
                 t += fluctuate(command.prompt_delay, randomness)
                 #t, l = input_lines(t, "#" * command.input_string; command.char_delay)
                 comment = "#" * command.input_string
@@ -68,12 +68,12 @@ function generate(m::Module, commands::Vector{JuliaInput};
                 #append!(lines, l)
                 push!(lines, LINEBREAK(t))
                 k != length(commands) && push!(lines, LINEBREAK(t))
+                push!(lines, JULIA(t))
                 continue
             else
                 error("command type `$(command.input.head)` is not defined.")
             end
         end
-        push!(lines, JULIA(t))
         t += fluctuate(command.prompt_delay, randomness)
         t, l = input_lines(t, command.input_string; command.char_delay)
         append!(lines, l)
@@ -85,9 +85,9 @@ function generate(m::Module, commands::Vector{JuliaInput};
             t, l = multiple_lines(t, output_lines; delay=command.output_row_delay, randomness)
             append!(lines, l)
         end
+        push!(lines, JULIA(t))
         t += fluctuate(command.delay, randomness)
     end
-    push!(lines, JULIA(t))
     tada && push!(lines, """[$(t), "o", "🎉"]""")
     push!(lines, """[$(t+0.2), "o", "\\r\\n"]""")
     return join(lines, "\n")
@@ -268,24 +268,28 @@ function output_string(m::Module, cmd::JuliaInput; width, height, suppressed)
     pipe = Pipe()
     io = IOContext(pipe, :color => true, :limit => true, :displaysize => (width, height))
 
-    res = redirect_stdout(io) do
-        try
-            res = Core.eval(m, cmd.input)
-            if !suppressed
-                if res !== nothing
-                    Core.eval(m, :(Base.show($io, MIME"text/plain"(), $res)))
-                    println(io)
-                    println(io)
+    redirect_stdout(io) do
+        redirect_stderr(io) do
+            try
+                res = Core.eval(m, cmd.input)
+                if !suppressed
+                    if res !== nothing
+                        Core.eval(m, :(Base.show($io, MIME"text/plain"(), $res)))
+                        println(io)
+                        println(io)
+                    else
+                        println(io)
+                    end
                 else
                     println(io)
                 end
-            else
+            catch e
+                Base.printstyled("ERROR: "; color=:red, bold=true)
+                showerror(io, e)
+                Base.show_backtrace(io, Base.catch_backtrace())
+                println(io)
                 println(io)
             end
-        catch e
-            showerror(io, e)
-            println(io)
-            println(io)
         end
     end
     close(Base.pipe_writer(io.io))
@@ -297,12 +301,21 @@ function input_lines(t::Float64, input_string; char_delay)
     lines = String[]
     for (k, input) in enumerate(inputs)
         for (i, ch) in enumerate(input)
-            push!(lines, """[$t, "o", $(repr(string(ch)))]""")
+            push!(lines, """[$t, "o", "$(tame_input(ch))"]""")
             i !== length(input) && (t += char_delay)
         end
         k == length(inputs) || push!(lines, """[$t, "o", "\\n\\r\\u001b[0K       "]""")
     end
     return t, lines
+end
+
+# escape char
+function tame_input(c::Char)
+    if c == '\$'
+        return "\$"
+    else
+        return escape_string(string(c))
+    end
 end
 
 function tame(str::AbstractString)
