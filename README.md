@@ -3,10 +3,14 @@
 [![Build Status](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl)
 
+Type `using Pkg; Pkg.add("https://github.com/GiggleLiu/AsciinemaGenerator.jl.git")` in a Julia REPL to install this package.
+
 This package mainly provides a single function `cast_file` that generates a `.cast` file from your Julia source code.
 
 ```julia
-help?> cast_file
+julia> using AsciinemaGenerator
+
+help?> cast_file  # type `?cast_file`
 search: cast_file
 
   cast_file(filename::String;
