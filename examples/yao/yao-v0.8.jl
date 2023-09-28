@@ -47,7 +47,7 @@ reg = rand_state(20)
 reg |> subroutine(20, qft, (4,6,7))
 
 # show to use GPU power
-using CuYao, CuArrays
+using CuYao
 creg = reg |> cu
 creg |> subroutine(20, qft, (4,6,7))
 
