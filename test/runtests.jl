@@ -59,7 +59,7 @@ end
     cmds = AsciinemaGenerator.generate_commands(exs, strings; delay=0.5, prompt_delay=0.05, output_delay=0.5, output_row_delay=0.01, char_delay=0.05)
     @test length(cmds) == 5
     @test cmds[1].input.head == :macrocall
-    @test cmds[2] == JuliaInput(:(using Pkg), "using Pkg\n", 0.5, 0.05, 0.05, 0.01, 0.5)
+    @test cmds[2] == JuliaInput(:(using Pkg), "using Pkg", 0.5, 0.05, 0.05, 0.01, 0.5)
     @test cmds[3] == JuliaInput(AsciinemaGenerator.ControlNode(:comment, Any[": Waiting for 5 seconds"]), ": Waiting for 5 seconds", 0.5, 0.05, 0.05, 0.01, 0.5)
     @test cmds[4] == JuliaInput(AsciinemaGenerator.ControlNode(:delay, Any[5.0]), "5", 0.5, 0.05, 0.05, 0.01, 0.5)
     @test cmds[5] == JuliaInput(:($(Expr(:toplevel, :(println("haa")), :(Pkg.status())))), "println(\"haa\"); Pkg.status()", 1.0, 0.05, 0.05, 0.3, 0.5)

@@ -1,6 +1,6 @@
 module AsciinemaGenerator
 
-using REPL
+using REPL, JuliaSyntax
 
 export cast_file
 
@@ -345,7 +345,7 @@ function parseall(str)
         sub = str[pos:end]
         if startswith(sub, "#+ ")  # delay
             c, pos = readuntil_linebreak(str, pos+3)
-            push!(exs, ControlNode(:delay, Any[parse(Float64, c)]))
+            push!(exs, ControlNode(:delay, Any[Base.parse(Float64, c)]))
             push!(strings, c)
             continue
         elseif startswith(sub, "#s ")  # setting
@@ -361,7 +361,7 @@ function parseall(str)
         end
 
         start = pos
-        ex, pos = Meta.parse(str, pos) # returns next starting point as well as expr
+        ex, pos = JuliaSyntax.parsestmt(Expr, str, pos) # returns next starting point as well as expr
         ex === nothing && break
         push!(exs, ex)
         push!(strings, str[start:prevind(str, pos)])
