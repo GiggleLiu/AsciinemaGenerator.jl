@@ -4,6 +4,8 @@
 [![Coverage](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl)
 
 This package mainly provides a single function `cast_file` that generates a `.cast` file from your Julia source code.
+**Show case**: The Yao Tutorial: https://giggleliu.github.io/AsciinemaGenerator.jl/?target=https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/munich/clips/yao-v0.8.cast
+
 
 ## Install
 Type `using Pkg; Pkg.add("https://github.com/GiggleLiu/AsciinemaGenerator.jl.git")` in a Julia REPL to install this package.
@@ -23,9 +25,6 @@ Type `using Pkg; Pkg.add("https://github.com/GiggleLiu/AsciinemaGenerator.jl.git
 3. Preview the generated `.cast` file by either
    1. locally: install python package `asciinema` with: `pip install asciinema` and type `asciinema play <path-to-cast-file>` in a terminal, or
    2. over web: upload your cast file to the public domain, e.g. the GitHub, then open the url: https://giggleliu.github.io/AsciinemaGenerator.jl?target=url-to-cast-file (replace the `url-to-cast-file` with your own cast file url).
-
-## Show case: The Yao Tutorial
-https://giggleliu.github.io/AsciinemaGenerator.jl/?target=https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/munich/clips/yao-v0.8.cast
 
 ## Source file syntax
 We use comments to control the play speed.
