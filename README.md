@@ -4,6 +4,7 @@
 [![Coverage](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl)
 
 This package mainly provides a single function `cast_file` that generates a `.cast` file from your Julia source code.
+
 **Show case**: The Yao Tutorial: https://giggleliu.github.io/AsciinemaGenerator.jl/?target=https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/munich/clips/yao-v0.8.cast
 
 
