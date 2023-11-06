@@ -3,13 +3,16 @@
 [![Build Status](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl)
 
-This package mainly provides a single function `cast_file` that generates a `.cast` file from your Julia source code.
+This package provides a single function `cast_file` that generates the [asciinema](https://asciinema.org/) live coding from your Julia source code.
 
 **Show case**: The Yao Tutorial: https://giggleliu.github.io/AsciinemaGenerator.jl/?target=https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/munich/clips/yao-v0.8.cast
 
 
 ## Install
-Type `using Pkg; Pkg.add("https://github.com/GiggleLiu/AsciinemaGenerator.jl.git")` in a Julia REPL to install this package.
+This package can be installed by opening a [Julia REPL](https://docs.julialang.org/en/v1/stdlib/REPL/) and typing:
+```julia
+julia> using Pkg; Pkg.add("AsciinemaGenerator")
+```
 
 ## Usage
 1. Prepare a Julia source file, e.g. [examples/yao/yao-v0.8.jl](examples/yao/yao-v0.8.jl). Please check the [Source file Syntax](#source-file-syntax) section for the supported syntax.
