@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>Asccinema Viewer</title>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.css" />
+<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.0.1/dist/bundle/asciinema-player.min.js"></script>
+</head>
+<body>
+    <div>
+        <div></div>
+        <script>
+            var target = document.currentScript.parentElement.firstElementChild;
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            const target_url = urlParams.get('target')
+            // if url is empty then show the help message
+            if (target_url == null) {
+                target.appendChild(document.createTextNode("Please specify the target url in the query string, e.g. ?target=https://raw.githubusercontent.com/GiggleLiu/YaoTutorial/munich/clips/yao-v0.8.cast"));
+            }else{
+                AsciinemaPlayer.create(target_url, target);
+                target.firstChild.firstChild.firstChild.style.background = "#000000";
+                target.firstChild.firstChild.firstChild.style.color = "#FFFFFF";
+            }
+        </script>
+    </div>
+</body>
+
+</html>
