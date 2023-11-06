@@ -52,10 +52,11 @@ function generate(m::Module, commands::Vector{JuliaInput};
     t = start_delay
     for (k, command) in enumerate(commands)
         if command.input isa ControlNode
+            @assert command.input.head ∈ (:delay, :comment) "command type `$(command.input.head)` is not defined."
             if command.input.head == :delay
                 t += command.input.args[1]
                 continue
-            elseif command.input.head == :comment
+            else
                 t += fluctuate(command.prompt_delay, randomness)
                 t, l = input_lines(t, "#" * command.input_string; command.char_delay)
                 append!(lines, l)
@@ -63,8 +64,6 @@ function generate(m::Module, commands::Vector{JuliaInput};
                 k != length(commands) && push!(lines, LINEBREAK(t))
                 push!(lines, JULIA(t))
                 continue
-            else
-                error("command type `$(command.input.head)` is not defined.")
             end
         end
         t += fluctuate(command.prompt_delay, randomness)
@@ -146,7 +145,7 @@ julia> using AsciinemaGenerator
 julia> output_file = tempname()
 "/tmp/jl_g7aZCDUbC7"
 
-julia> cast_file(joinpath("test/test_input.jl"); output_file, mod=Main);
+julia> cast_file(joinpath(pkgdir(AsciinemaGenerator), "examples", "hello", "hello.jl"); output_file, mod=Main);
 
 shell> asciinema play /tmp/jl_g7aZCDUbC7
 ```
@@ -156,16 +155,16 @@ The last line plays the clip, please refer the `Play` section of this docstring.
 ### Input file
 The statement-wise arguments can also be specify in the input Julia source file. e.g.
 ```julia
-shell> cat test/test_input.jl
-@show "Hello"
-
+shell> cat examples/hello/hello.jl 
+#s delay=1.0; output_row_delay=0.3; prompt_delay=0.1; output_delay=0.5; char_delay=0.05
 using Pkg
 
-#: Waiting for 5 seconds
-#+ 5
-#s delay=1.0; output_row_delay=0.3
+Pkg.status()
 
-println("haa"); Pkg.status()
+# Waiting for 5 seconds...
+#+ 5
+
+println("Hello, AsciinemaGenerator!")
 ```
 
 Lines starting with `#s ` are for setting parameters, different assign statements should be separated by `;`.
@@ -173,8 +172,8 @@ Lines starting with `#+` are for inserting an extra time delay.
 Other lines starting with `#` are regular comments, which will also be shown in the `.cast` file!
 
 ### Play
-To install `asciinema`, please check the [official site](https://asciinema.org/docs/installation).
-One can also deploy the `.cast` file in a website, please check the `demo` folder in the `demo` branch of this repo for a minimum [Franklin](https://github.com/tlienart/Franklin.jl) static site example.
+* Local:  Install python package asciinema with: `pip install asciinema` and type `asciinema play <path-to-cast-file>` in a terminal.
+* Over web: Upload your cast file to the public domain, e.g. the GitHub, then open the url: https://giggleliu.github.io/AsciinemaGenerator.jl?target=url-to-cast-file (replace the url-to-cast-file with your own cast file url).
 """
 function cast_file(filename::String;
         mod::Module = @__MODULE__,
@@ -321,11 +320,13 @@ rmlines(ex::Expr) = begin
     hd = ex.head
     if hd == :macrocall
         Expr(:macrocall, ex.args[1], nothing, rmlines.(ex.args[3:end])...)
-    elseif hd == :block && length(ex.args) == 1  # unroll single statement block
-        rmlines(ex.args[1])
     else
         tl = Any[rmlines(ex) for ex in ex.args if !(ex isa LineNumberNode)]
-        Expr(hd, tl...)
+        if hd == :block && length(tl) == 1  # unroll single statement block
+            tl[1]
+        else
+            Expr(hd, tl...)
+        end
     end
 end
 rmlines(@nospecialize(a)) = a
