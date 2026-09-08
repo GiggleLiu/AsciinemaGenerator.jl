@@ -1,0 +1,4 @@
+[deps]
+AsciinemaGenerator = "126a0909-f052-481b-a318-ea548fff52bb"
+MethodAnalysis = "85b6ec6f-f7df-4429-9514-a64bcd9ee824"
+TropicalNumbers = "b3a74e9c-7526-4576-a4eb-79c0d4c32334"

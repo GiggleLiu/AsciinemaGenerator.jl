@@ -1,0 +1,4 @@
+[deps]
+AsciinemaGenerator = "126a0909-f052-481b-a318-ea548fff52bb"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PkgTemplates = "14b8a8f1-9102-5b29-a752-f990bacb7fe1"

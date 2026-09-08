@@ -1,0 +1,5 @@
+[deps]
+AsciinemaGenerator = "126a0909-f052-481b-a318-ea548fff52bb"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
