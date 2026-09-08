@@ -2,6 +2,7 @@
 
 [![Build Status](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/GiggleLiu/AsciinemaGenerator.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/GiggleLiu/AsciinemaGenerator.jl)
+![Agent maintained](https://img.shields.io/badge/maintenance-agent%20maintained-blue)
 
 This package provides a single function `cast_file` that generates the [asciinema](https://asciinema.org/) live coding from your Julia source code.
 
