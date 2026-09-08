@@ -31,6 +31,10 @@ julia> using Pkg; Pkg.add("AsciinemaGenerator")
    1. locally: install python package `asciinema` with: `pip install asciinema` and type `asciinema play <path-to-cast-file>` in a terminal, or
    2. over web: upload your cast file to the public domain, e.g. the GitHub, then open the url: https://giggleliu.github.io/AsciinemaGenerator.jl?target=url-to-cast-file (replace the `url-to-cast-file` with your own cast file url).
 
+More complete Julia tutorial recordings are available in
+[`examples/livecoding`](examples/livecoding/README.md). They retain separate
+project environments for their example-specific dependencies.
+
 ## Source file syntax
 We use comments to control the play speed.
 1. Wait for a certain time: `#+ int` (space required). The following example will wait for 5 seconds before executing the next line.
